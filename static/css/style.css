@@ -37,7 +37,7 @@
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
     
     /* Spacing */
-    --sidebar-width: 320px;
+    --sidebar-width: 400px;
     --header-height: 60px;
     --radius-sm: 0.375rem;
     --radius-md: 0.5rem;
@@ -299,7 +299,7 @@ body {
 
 .code-editor, .query-input {
     font-family: var(--font-mono);
-    min-height: 100px;
+    min-height: 200px;
     resize: vertical;
 }
 

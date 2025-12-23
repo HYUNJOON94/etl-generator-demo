@@ -205,39 +205,50 @@ class DatabaseConnector:
             return "Unknown"
     
     def test_query(self, sql: str, limit: int = 10) -> Dict[str, Any]:
-        """쿼리 테스트 실행 (SELECT만 허용)"""
+        """쿼리 실행"""
         if not self.engine:
             return {"success": False, "error": "데이터베이스에 연결되어 있지 않습니다."}
         
-        # SELECT만 허용
-        sql_upper = sql.strip().upper()
-        if not sql_upper.startswith("SELECT"):
-            return {
-                "success": False,
-                "error": "SELECT 쿼리만 실행할 수 있습니다."
-            }
+        # SQL 정리
+        sql_trim = sql.strip().rstrip(';')
+        sql_upper = sql_trim.upper()
         
-        # LIMIT 추가 (안전을 위해)
-        if "LIMIT" not in sql_upper:
-            sql = f"{sql.rstrip(';')} LIMIT {limit}"
+        # SELECT 쿼리인 경우에만 LIMIT 추가 시도
+        # 대소문자 무시 및 선행 공백/주석 무시를 위해 lstrip() 사용
+        if sql_upper.lstrip().startswith("SELECT") or sql_upper.lstrip().startswith("WITH"):
+            if "LIMIT" not in sql_upper:
+                sql_to_run = f"{sql_trim} LIMIT {limit}"
+            else:
+                sql_to_run = sql_trim
+        else:
+            sql_to_run = sql_trim
         
         try:
             with self.engine.connect() as conn:
-                result = conn.execute(text(sql))
-                rows = result.fetchall()
-                columns = list(result.keys())
+                result = conn.execute(text(sql_to_run))
                 
-                # 결과를 JSON 직렬화 가능한 형태로 변환
-                data = []
-                for row in rows:
-                    data.append({col: self._serialize_value(val) for col, val in zip(columns, row)})
-                
-                return {
-                    "success": True,
-                    "columns": columns,
-                    "data": data,
-                    "row_count": len(data)
-                }
+                # 결과가 있는 경우 (SELECT 등)
+                if result.returns_rows:
+                    rows = result.fetchall()
+                    columns = list(result.keys())
+                    data = []
+                    for row in rows:
+                        data.append({col: self._serialize_value(val) for col, val in zip(columns, row)})
+                    
+                    return {
+                        "success": True,
+                        "columns": columns,
+                        "data": data,
+                        "row_count": len(data)
+                    }
+                else:
+                    # 결과가 없는 경우 (INSERT, UPDATE, DELETE 등)
+                    conn.commit() # 명시적 커밋
+                    return {
+                        "success": True,
+                        "message": "쿼리가 성공적으로 실행되었습니다.",
+                        "row_count": result.rowcount
+                    }
                 
         except SQLAlchemyError as e:
             return {

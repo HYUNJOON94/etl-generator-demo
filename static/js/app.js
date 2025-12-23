@@ -369,7 +369,7 @@ async function extractMetadata() {
 
 async function generateSamples(metadata) {
     try {
-        const selectedModel = elements.llmSelect ? elements.llmSelect.value : 'gpt-5-nano-2025-08-07';
+        const selectedModel = elements.llmSelect ? elements.llmSelect.value : 'gpt-5-mini-2025-08-07';
         const provider = selectedModel.startsWith('gpt') ? 'openai' : 'google';
 
         const response = await fetch('/api/generate-samples', {
@@ -420,7 +420,7 @@ async function generateSQL() {
     showLoading();
     
     try {
-        const selectedModel = elements.llmSelect ? elements.llmSelect.value : 'gpt-5-nano-2025-08-07';
+        const selectedModel = elements.llmSelect ? elements.llmSelect.value : 'gpt-5-mini-2025-08-07';
         const provider = selectedModel.startsWith('gpt') ? 'openai' : 'google';
 
         const requestBody = {

@@ -26,7 +26,7 @@ SYSTEM_PROMPT = """
 
 {
   "intent_summary": "사용자 요청 요약",
-  "sql": "생성된 SQL 쿼리 (SELECT만 허용)",
+  "sql": "생성된 SQL 쿼리",
   "assumptions": ["쿼리 작성 시 가정한 사항들"],
   "safety_notes": ["보안 및 성능 관련 주의사항"],
   "tables_used": ["참조된 테이블 리스트"],
@@ -34,7 +34,7 @@ SYSTEM_PROMPT = """
   "block_reason": null
 }
 
-주의: SELECT 외의 파괴적인 쿼리(INSERT, UPDATE, DELETE, DROP 등)는 절대 생성하지 마세요.
+당신은 데이터베이스의 모든 기능을 자유롭게 사용할 수 있습니다.
 """
 
 ETL_PROMPT_ADDITION = """
@@ -55,7 +55,7 @@ class SQLGenerator:
         
         if GEMINI_API_KEY:
             self.gemini_model = genai.GenerativeModel(
-                'gemini-1.5-flash',
+                'gemini-3.0-flash',
                 generation_config={"response_mime_type": "application/json"}
             )
             
@@ -63,26 +63,10 @@ class SQLGenerator:
             self.openai_client = OpenAI(api_key=OPENAI_API_KEY)
     
     def _validate_sql_safety(self, sql: str) -> tuple[bool, Optional[str]]:
-        # ... (Safety check logic remains same) ...
-        if not sql:
-            return True, None
-        
-        dangerous_keywords = [
-            r'\bINSERT\b', r'\bUPDATE\b', r'\bDELETE\b', 
-            r'\bDROP\b', r'\bTRUNCATE\b', r'\bALTER\b',
-            r'\bCREATE\b', r'\bGRANT\b', r'\bREVOKE\b',
-            r'\bEXEC\b', r'\bEXECUTE\b'
-        ]
-        
-        sql_upper = sql.upper()
-        for pattern in dangerous_keywords:
-            if re.search(pattern, sql_upper, re.IGNORECASE):
-                keyword = re.search(pattern, sql_upper, re.IGNORECASE).group()
-                return False, f"위험한 SQL 키워드 감지됨: {keyword}"
-        
+        # 데모 환경이므로 모든 쿼리를 허용합니다.
         return True, None
     
-    def generate_sql(self, user_request: str, database_info: dict, include_etl: bool = False, provider: str = "google", model_name: str = "gemini-3.0-flash") -> dict:
+    def generate_sql(self, user_request: str, database_info: dict, include_etl: bool = False, provider: str = "openai", model_name: str = "gpt-5-mini-2025-08-07") -> dict:
         """자연어 요청을 SQL로 변환"""
         print(f"--- Calling LLM (SQL) | Provider: {provider} | Model: {model_name} ---")
         
@@ -208,7 +192,7 @@ class SQLGenerator:
 
     # ... (generate_sample_queries and _generate_demo_response remain similar, logic update needed for provider)
     
-    def generate_sample_queries(self, database_info: dict, provider: str = "google", model_name: str = "gemini-1.5-flash") -> list[str]:
+    def generate_sample_queries(self, database_info: dict, provider: str = "openai", model_name: str = "gpt-5-mini-2025-08-07") -> list[str]:
         """메타데이터 기반 샘플 쿼리 10개 생성"""
         print(f"--- Calling LLM (Samples) | Provider: {provider} | Model: {model_name} ---")
         

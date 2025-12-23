@@ -118,17 +118,17 @@
     <label class="section-subtitle" for="llmSelect">LLM Model</label>
     <select id="llmSelect" class="form-select">
         <option value="gpt-5.2-2025-12-11">OpenAI High (5.2)</option>
-        <option value="gpt-5-mini-2025-08-07">OpenAI Middle (5-mini)</option>
+        <option value="gpt-5-mini-2025-08-07" selected>OpenAI Middle (5-mini)</option>
         <option value="gpt-5-nano-2025-08-07">OpenAI Low (5-nano)</option>
-        <option value="gemini-1.5-flash">Gemini (3.0 flash)</option>
+        <option value="gemini-3.0-flash">Gemini (3.0 flash)</option>
     </select>
 </div>
                     <button class="btn-generate" id="generateBtn">
-                        <span class="icon">✨</span> Generate SQL
+                        Generate SQL
                     </button>
 
                     <button class="btn-execute hidden" id="executeBtn">
-                        <span class="icon">▶️</span> Run Query
+                        Run Query
                     </button>
                 </div>
                 
@@ -219,7 +219,7 @@
                                 <div class="header-actions">
                                     <span class="lang-badge">SQL</span>
                                     <button class="btn-xs-primary" id="runQueryBtn">
-                                        ▶ Run
+                                        Run
                                     </button>
                                 </div>
                             </div>
@@ -323,7 +323,11 @@
         
         // Function to toggle views
         function toggleView() {
-            if (!resultContainer.classList.contains('hidden') && resultContainer.style.display !== 'none') {
+            const loading = document.getElementById('loading');
+            const isLoading = loading && !loading.classList.contains('hidden');
+            const isResultVisible = !resultContainer.classList.contains('hidden') && resultContainer.style.display !== 'none';
+            
+            if (isResultVisible || isLoading) {
                 emptyState.classList.add('hidden');
             } else {
                 emptyState.classList.remove('hidden');
@@ -333,6 +337,10 @@
         // Observe changes
         const observer = new MutationObserver(toggleView);
         observer.observe(resultContainer, { attributes: true, attributeFilter: ['class', 'style'] });
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) {
+            observer.observe(loadingEl, { attributes: true, attributeFilter: ['class'] });
+        }
         
         // Initial check
         toggleView();

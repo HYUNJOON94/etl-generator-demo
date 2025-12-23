@@ -34,8 +34,8 @@ class SQLGenerateRequest(BaseModel):
     database_info: Optional[dict] = None  # DB 메타데이터
     db_type: Optional[str] = "PostgreSQL"  # 샘플 메타데이터 사용 시
     include_etl: bool = False  # ETL 파이프라인 포함 여부
-    provider: Optional[str] = "google" # google or openai
-    model_name: Optional[str] = "gemini-1.5-flash" # gpt-5.2-2025-12-11, gpt-5-mini-2025-08-07, gpt-5-nano-2025-08-07
+    provider: Optional[str] = "openai" # google or openai
+    model_name: Optional[str] = "gpt-5-mini-2025-08-07"
 
 
 class SQLGenerateResponse(BaseModel):
@@ -188,7 +188,7 @@ async def generate_samples(request: dict = None):
     """메타데이터 기반 샘플 쿼리 생성"""
     
     provider = request.get("provider", "google") if request else "google"
-    model_name = request.get("model_name", "gemini-1.5-flash") if request else "gemini-1.5-flash"
+    model_name = request.get("model_name", "gemini-3.0-flash") if request else "gemini-3.0-flash"
 
     # 1. 연결된 DB가 있으면 Live Metadata 사용
     if db_connector.engine:
@@ -208,7 +208,7 @@ async def generate_samples(request: dict = None):
 
 @app.post("/api/db/execute")
 async def execute_query(request: QueryExecuteRequest):
-    """쿼리 실행 (SELECT만 허용)"""
+    """쿼리 실행"""
     result = db_connector.test_query(request.sql, request.limit)
     
     if not result.get("success"):
@@ -227,5 +227,6 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port)
 
